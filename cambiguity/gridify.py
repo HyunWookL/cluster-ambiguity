@@ -27,19 +27,22 @@ def pixelify(data, opacity, radius, pixel_size):
 
 	## function to draw points in the pixels
 	@njit
-	def draw_points(data, opacity, radius):
+	def draw_points(data, opacity, radius, pixels):
 		for datum in data:
 			x = int(datum[0])
 			y = int(datum[1])
 			for i in range(x - radius, x + radius + 1):
 				for j in range(y - radius, y + radius + 1):
-					if (i - x) ** 2 + (j - y) ** 2 <= radius ** 2:
+					if ((i - x) ** 2 + (j - y) ** 2 <= radius ** 2 
+							and i >= 0 and i < pixel_size
+							and j >= 0 and j < pixel_size
+					):
 						pixels[i, j] += opacity
 						if (pixels[i, j]) > 1:
 							pixels[i, j] = 1
 	
 	## run the function
-	draw_points(data, opacity, radius)
+	draw_points(data, opacity, radius, pixels)
 
 	return pixels
 
@@ -59,9 +62,11 @@ def gridify(data, opacity, radius, grid_size, cell_size):
 			for j in prange(grid.shape[1]):
 				grid[i, j] = np.sum(pixels[i * cell_size : (i + 1) * cell_size, j * cell_size : (j + 1) * cell_size])
 
+
 	## fill the grid based on pixels value
 	grid = np.zeros((grid_size, grid_size))
 	fill_grid(pixels, grid, cell_size)
+	grid = grid / (cell_size ** 2)
 
 	return grid
 
