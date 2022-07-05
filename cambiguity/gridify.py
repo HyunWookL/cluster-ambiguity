@@ -47,13 +47,15 @@ def pixelify(data, opacity, radius, pixel_size):
 	return pixels
 
 
-def gridify(data, opacity, radius, grid_size, cell_size):
+def gridify(data, opacity, radius, pixel_size, grid_size):
 	"""
 	convert input 2D data into a grid based on the density of points
 	"""
 
-	## get pixels 
-	pixel_size = grid_size * cell_size
+	## get pixels
+	if (pixel_size % grid_size) != 0:
+		raise ValueError('pixel_size must be divisible by grid_size')
+	cell_size = int(pixel_size / grid_size)
 	pixels = pixelify(data, opacity, radius, pixel_size)
 	
 	@njit(parallel=True)
