@@ -1,7 +1,7 @@
 import numpy as np
 from collections import deque
 
-def cluster_extraction(grid, walk_num_ratio = 0.5):
+def cluster_extraction(grid, walk_num_ratio = 0.2):
 	"""
 	extract the cluster from the grid and return as a form of grid
 	"""
@@ -33,14 +33,14 @@ def cluster_extraction(grid, walk_num_ratio = 0.5):
 		x, y = traversal_queue.popleft()
 		for i in range(x - 1, x + 2):
 			for j in range(y - 1, y + 2):
-				if (i >= 0 and i < grid_size and j >= 0 and j < grid_size) and (i != x or j != y):
+				if (i >= 0 and i < grid_size and j >= 0 and j < grid_size) and (i != x or j != y) and (grid[i,j] != 0):
 					weight = (grid[i, j] + grid[x, y] + (1 - np.abs(grid[i, j] - grid[x, y]))) / 3
 					prob   = np.random.rand()
 					# print(weight, prob)
-					if weight > prob:
-						traversal_queue.append((i, j))
+					if weight > prob and (i * grid_size + j) not in visited:
 						visited.add(i * grid_size + j)
 						visit_num += 1
+						traversal_queue.append((i, j))
 
 	
 	## change visited into grid format (0 or 1)
