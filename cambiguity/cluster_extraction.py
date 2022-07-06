@@ -33,7 +33,11 @@ def cluster_extraction(grid, walk_num_ratio = 0.2):
 		x, y = traversal_queue.popleft()
 		for i in range(x - 1, x + 2):
 			for j in range(y - 1, y + 2):
-				if (i >= 0 and i < grid_size and j >= 0 and j < grid_size) and (i != x or j != y) and (grid[i,j] != 0):
+				if (
+					(i >= 0 and i < grid_size and j >= 0 and j < grid_size) and 
+					(i != x or j != y) and 
+					(grid[i,j] != 0)
+				):
 					weight = (grid[i, j] + grid[x, y] + (1 - np.abs(grid[i, j] - grid[x, y]))) / 3
 					prob   = np.random.rand()
 					# print(weight, prob)
