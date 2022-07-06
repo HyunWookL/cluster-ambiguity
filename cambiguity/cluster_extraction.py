@@ -1,7 +1,7 @@
 import numpy as np
 from collections import deque
 
-def cluster_extraction(grid, walk_num_ratio = 0.2):
+def cluster_extraction(grid, walk_num_ratio = 0.3):
 	"""
 	extract the cluster from the grid and return as a form of grid
 	"""
