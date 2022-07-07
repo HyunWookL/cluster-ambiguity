@@ -1,7 +1,6 @@
 from tensorflow.keras import Model
 from tensorflow.keras import layers, losses
 import tensorflow as tf
-import tensorflow_addons as tfa
 
 class ClusterAutoEncoder(Model):
 	def __init__(self, grid_size, latent_dim):

@@ -21,4 +21,5 @@ def generate_random_clusters(
 		os.makedirs(f"{path}/{identifier}/")
 	for i in tqdm(range(cluster_num)):
 		cluster = cluster_extraction(grid, walk_num_ratio)
+		cluster = cluster * grid
 		np.save(f"{path}/{identifier}/{i}.npy", cluster)
