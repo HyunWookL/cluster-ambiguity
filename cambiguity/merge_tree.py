@@ -1,7 +1,10 @@
+import numpy as np
+
 class MergeTree():
-	def __init__(self):
+	def __init__(self, size):
 		self.nodes = {}
 		self.curr_node_id = 0
+		self.size = size
 
 	def initialize_node(self, val, x, y):
 		"""
@@ -20,10 +23,11 @@ class MergeTree():
 		"""
 		if node_id not in self.nodes:
 			raise KeyError("node_id does not exist within the nodes set")
-		if val in self.nodes[node_id]:
+		if val in self.nodes[node_id]["coord"]:
 			self.nodes[node_id]["coord"][val].append((x, y))
 		else:
 			self.nodes[node_id]["coord"][val] = [(x, y)]
+
 
 	def merge_nodes(self, component, val):
 		"""
@@ -48,6 +52,7 @@ class MergeTree():
 			else:
 				merged_node["childs"].append(node_id)
 
+		
 		## update the nodes
 		if len(merged_node["childs"]) == 1: ## if there exists a single child node, the merge node is just a extension of a child node
 			self.nodes[merged_node["childs"][0]]["coord"][val] = merged_node["coord"][val]
@@ -56,6 +61,43 @@ class MergeTree():
 			self.nodes[self.curr_node_id] = merged_node
 			self.curr_node_id += 1
 			return self.curr_node_id - 1
-	
 
-	# def return_node_
+	def get_nodes(self):
+		return self.nodes
+	
+	def get_node_ids(self):
+		return list(self.nodes.keys())
+
+	def get_node_ids_with_childs(self):
+		node_ids_with_childs = []
+		for node_id in self.nodes.keys():
+			if (self.nodes[node_id]["childs"] != 0):
+				node_ids_with_childs.append(node_id)
+		
+		return node_ids_with_childs
+
+
+	def get_node_coords(self, node_id):
+		"""
+		return the coordinates of the cells occupied of the node
+		recursively traverse the coords of the node and its child nodes
+		"""
+		coords = []
+		if len(self.nodes[node_id]["childs"]) != 0:
+			for child in self.nodes[node_id]["childs"]:
+				coords += self.get_node_coords(child)
+		for val in self.nodes[node_id]["coord"]:
+			coords += self.nodes[node_id]["coord"][val]
+		return coords
+	
+	def get_node_area(self, node_id):
+		"""
+		return the area occupied by the node
+		"""
+		## convert the results of the get_node_coords into the 2d array
+		coords = self.get_node_coords(node_id)
+		area = np.zeros((self.size, self.size))
+		for coord in coords:
+			area[coord[0], coord[1]] = 1
+		return area
+		

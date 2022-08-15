@@ -4,7 +4,7 @@ import merge_tree as mtree
 import networkx as nx
 
 import importlib
-importlib.reload(mt)
+importlib.reload(mtree)
 
 ## function to construct the arrays
 @njit
@@ -74,7 +74,7 @@ def construct_merge_tree(grid):
 	## initialize the data structure for constructing merge tree
 	node_distribution = np.full((size, size), -1)
 	adj_nodes_graph   = nx.Graph()
-	mt 								= mtree.MergeTree()
+	mt 								= mtree.MergeTree(size)
 
 	## traverse the sorted arrays and update merge tree
 	curr_F = values[0]
@@ -102,7 +102,7 @@ def construct_merge_tree(grid):
 			mt.add_cell(composition_list[0], curr_F, x, y)
 			node_distribution[x, y] = composition_list[0]
 			update_adj_nodes_graph(adj_nodes_graph, composition_list)
-
+		
 	## finialize merge tree
 	update_merge_tree(mt, node_distribution, adj_nodes_graph, curr_F)			
 	return mt
