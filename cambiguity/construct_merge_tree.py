@@ -37,11 +37,25 @@ def update_adj_nodes_graph(adj_nodes_graph, composition_list):
 			if node_id1 != node_id2 and not adj_nodes_graph.has_edge(node_id1, node_id2):
 				adj_nodes_graph.add_edge(node_id1, node_id2)
 
+def update_merge_tree(mt, node_distribution, adj_nodes_graph, curr_F):
+	"""
+	update the merge tree based on the given components
+	"""
+	components = nx.connected_components(adj_nodes_graph)
+	for c in components:
+		merged_node_id = mt.merge_nodes(c, curr_F)
+		for child_id in c:
+			node_distribution[node_distribution == child_id] = merged_node_id
+	adj_nodes_graph.clear()
+
+
+
 	
 
 def construct_merge_tree(grid):
 	"""
 	construct merge tree based on the given input grid
+	returns the constructed merge tree sturcture
 	"""
 	size = len(grid)
 
@@ -69,11 +83,8 @@ def construct_merge_tree(grid):
 
 		## confirm the constructed merge tree candidate 
 		if val != curr_F:
-			components = nx.connected_components(adj_nodes_graph)
-			for c in components:
-				print(c)
+			update_merge_tree(mt, node_distribution, adj_nodes_graph, curr_F)
 			curr_F = val
-			break
 			
 		## update the merge tree candidate
 		composition = adjacent_cells_composition(node_distribution, x, y)
@@ -91,9 +102,10 @@ def construct_merge_tree(grid):
 			mt.add_cell(composition_list[0], curr_F, x, y)
 			node_distribution[x, y] = composition_list[0]
 			update_adj_nodes_graph(adj_nodes_graph, composition_list)
-			
-	
 
+	## finialize merge tree
+	update_merge_tree(mt, node_distribution, adj_nodes_graph, curr_F)			
+	return mt
 
 		
 				

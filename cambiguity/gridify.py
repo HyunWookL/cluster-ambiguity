@@ -70,6 +70,9 @@ def gridify(data, opacity, radius, pixel_size, grid_size):
 	fill_grid(pixels, grid, cell_size)
 	grid = grid / (cell_size ** 2)
 
+	## round the grid
+	grid = np.round(grid, decimals=3)
+
 	return grid
 
 
