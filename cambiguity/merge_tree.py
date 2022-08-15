@@ -49,8 +49,13 @@ class MergeTree():
 				merged_node["childs"].append(node_id)
 
 		## update the nodes
-		self.nodes[self.curr_node_id] = merged_node
-		self.curr_node_id += 1
+		if len(merged_node["childs"]) == 1: ## if there exists a single child node, the merge node is just a extension of a child node
+			self.nodes[merged_node["childs"][0]]["coord"][val] = merged_node["coord"][val]
+			return merged_node["childs"][0]
+		else:
+			self.nodes[self.curr_node_id] = merged_node
+			self.curr_node_id += 1
+			return self.curr_node_id - 1
+	
 
-		return self.curr_node_id - 1
-		
+	# def return_node_
