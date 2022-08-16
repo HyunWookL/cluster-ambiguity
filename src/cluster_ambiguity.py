@@ -125,9 +125,8 @@ class ClusterAmbiguity():
 			if len(curr_cluster_1) == 0 or len(curr_cluster_2) == 0:
 				m_list.append(-100)
 				continue
-			m_list.append(clm.silhouette(curr_cluster_1, curr_cluster_2, self.grid))
+			m_list.append(clm.kl_divergence(curr_cluster_1, curr_cluster_2, self.grid))
 		
-		print("----------------")
 			### compute the score
 
 
