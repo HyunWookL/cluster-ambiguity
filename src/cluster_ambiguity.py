@@ -40,10 +40,12 @@ class ClusterAmbiguity():
 		## get and traverse the node hierarchy
 		self.node_hierarchy = self.mt.get_node_hierarchy()
 		root_node = list(self.node_hierarchy.keys())[0]
-		final_score, final_weight, _ = self.traverse_and_accumulate_score(root_node)
+		final_score, final_weight, _ = self.traverse_and_accumulate_score(root_node, self.node_hierarchy[root_node])
 		self.score = final_score / final_weight
 
-	def traverse_and_accumulate_score(self, node_id):
+		return self.score
+
+	def traverse_and_accumulate_score(self, node_id, n_hierarchy):
 		"""
 		recursively traverse the node hierarchy and accumulate the score
 		"""
@@ -51,20 +53,21 @@ class ClusterAmbiguity():
 		weight = 0
 
 		## base case (no child)
-		if len(self.node_hierarchy[node_id]) == 0:
-			coords = self.mt.get_node_coords(node_id)
+		if len(n_hierarchy) == 0:
+			coords = self.mt.get_node_coord_dict(node_id)
 			return score, weight, coords
 
 		## recursive case
-		keys = list(self.node_hierarchy[node_id].keys())
+		keys = list(n_hierarchy.keys())
 		coords_list = []
 
 		### accumulate score and weight
 		for key in keys:
-			score_, weight_, coords_ = self.traverse_and_accumulate_score(key)
+			score_, weight_, coords_ = self.traverse_and_accumulate_score(key, n_hierarchy[key])
 			score += score_
 			weight += weight_
 			coords_list.append(coords_)
+		
 
 		### compute the score of the current node
 		curr_pair_score_sum = 0 
@@ -81,7 +84,7 @@ class ClusterAmbiguity():
 		### add the score / weight of the current node to the accumulated score
 		score  += curr_node_score * curr_node_weight
 		weight += curr_node_weight
-		coords  = self.__combine_coords(coords_list + [self.mt.get_nodes()[node_id]['coords']])
+		coords  = self.__combine_coords(coords_list + [self.mt.get_node_coord_dict(node_id)])
 
 		return score, weight, coords
 

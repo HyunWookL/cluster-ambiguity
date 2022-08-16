@@ -99,6 +99,12 @@ class MergeTree():
 		
 		return node_ids_with_childs
 
+	def get_node_coord_dict(self, node_id):
+		"""
+		return the dictionary holding the node coords
+		"""
+		return self.nodes[node_id]["coord"]
+
 
 	def get_node_coords(self, node_id):
 		"""
