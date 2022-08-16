@@ -39,8 +39,85 @@ class ClusterAmbiguity():
 		"""
 		## get and traverse the node hierarchy
 		self.node_hierarchy = self.mt.get_node_hierarchy()
-		print(list(self.node_hierarchy.keys())[0])
-		# self.cluster_ambiguity_score = self.traverse_and_compute_cluster_ambiguity(self.node_hierarchy.keys()[0])
+		root_node = list(self.node_hierarchy.keys())[0]
+		final_score, final_weight, _ = self.traverse_and_accumulate_score(root_node)
+		self.score = final_score / final_weight
+
+	def traverse_and_accumulate_score(self, node_id):
+		"""
+		recursively traverse the node hierarchy and accumulate the score
+		"""
+		score = 0
+		weight = 0
+
+		## base case (no child)
+		if len(self.node_hierarchy[node_id]) == 0:
+			coords = self.mt.get_node_coords(node_id)
+			return score, weight, coords
+
+		## recursive case
+		keys = list(self.node_hierarchy[node_id].keys())
+		coords_list = []
+
+		### accumulate score and weight
+		for key in keys:
+			score_, weight_, coords_ = self.traverse_and_accumulate_score(key)
+			score += score_
+			weight += weight_
+			coords_list.append(coords_)
+
+		### compute the score of the current node
+		curr_pair_score_sum = 0 
+		curr_pair_weight_sum = 0
+		for i, _ in enumerate(coords_list):
+			for j in range(i + 1, len(coords_list)):
+				curr_pair_score  = self.__compute_score(coords_list[i], coords_list[j])
+				curr_pair_weight = self.__get_weight([coords_list[i], coords_list[j]])
+				curr_pair_score_sum += curr_pair_score * curr_pair_weight
+				curr_pair_weight_sum += curr_pair_weight
+		curr_node_score = curr_pair_score_sum / curr_pair_weight_sum
+		curr_node_weight = self.__get_weight(coords_list)
+
+		### add the score / weight of the current node to the accumulated score
+		score  += curr_node_score * curr_node_weight
+		weight += curr_node_weight
+		coords  = self.__combine_coords(coords_list + [self.mt.get_nodes()[node_id]['coords']])
+
+		return score, weight, coords
+
+	def __compute_score(self, coords1, coords2):
+		"""
+		compute the score of the two given coordinates
+		"""
+		return 0.5
+
+	def __get_weight(self, coords_list):
+		"""
+		get the weight of the given coordinates list
+		the weight is the number of tuples throughout the coords 
+		"""
+		weight = 0
+		for coord in coords_list:
+			for val in coord:
+				weight += len(coord[val])
+		return weight
+	
+	def __combine_coords(self, coords_list):
+		"""
+		combine the coordinates of the given coordinates list
+		"""
+		new_coords = {}
+		for coord in coords_list:
+			for key in coord:
+				if key not in new_coords:
+					new_coords[key] = coord[key]
+				else:
+					new_coords[key] += coord[key]
+		return new_coords
+
+				
+
+
 
 
 	
