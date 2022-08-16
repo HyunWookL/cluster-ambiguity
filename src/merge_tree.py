@@ -68,7 +68,30 @@ class MergeTree():
 	def get_node_ids(self):
 		return list(self.nodes.keys())
 
+	def __get_node_hierarchy_recursive(self, node_id):
+		"""
+		recursively traverse the node hierarchy
+		"""
+		node_hierarchy = {}
+		if len(self.nodes[node_id]["childs"]) != 0:
+			for child in self.nodes[node_id]["childs"]:
+				node_hierarchy[child] = self.__get_node_hierarchy_recursive(child)
+		return node_hierarchy
+	
+	def get_node_hierarchy(self):
+		"""
+		return the node hierarchy of the merge tree
+		"""		
+		root_node = max(self.get_node_ids_with_childs())
+		return {
+			root_node: self.__get_node_hierarchy_recursive(root_node)
+		}
+	
+
 	def get_node_ids_with_childs(self):
+		"""
+		return the node ids that have child nodes
+		"""
 		node_ids_with_childs = []
 		for node_id in self.nodes.keys():
 			if (self.nodes[node_id]["childs"] != 0):
