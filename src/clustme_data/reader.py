@@ -15,3 +15,4 @@ def read_clustme_data(path = "./data/"):
 			"data": datum
 		})
 	return clustme_data
+
