@@ -7,6 +7,9 @@ importlib.reload(gy)
 import construct_merge_tree as cmt
 importlib.reload(cmt)
 
+import clustering_measure as clm
+importlib.reload(clm)
+
 
 class ClusterAmbiguity():
 	"""
@@ -74,12 +77,18 @@ class ClusterAmbiguity():
 		curr_pair_weight_sum = 0
 		for i, _ in enumerate(coords_list):
 			for j in range(i + 1, len(coords_list)):
+				if (len(coords_list[i]) + len(coords_list[j])) < 3:
+					continue ## skip the pair if the number of tuples is less than 3 (cannot perform regression)
 				curr_pair_score  = self.__compute_score(coords_list[i], coords_list[j])
 				curr_pair_weight = self.__get_weight([coords_list[i], coords_list[j]])
 				curr_pair_score_sum += curr_pair_score * curr_pair_weight
 				curr_pair_weight_sum += curr_pair_weight
-		curr_node_score = curr_pair_score_sum / curr_pair_weight_sum
-		curr_node_weight = self.__get_weight(coords_list)
+		if curr_pair_score_sum > 0:
+			curr_node_score = curr_pair_score_sum / curr_pair_weight_sum
+			curr_node_weight = self.__get_weight(coords_list)
+		else:
+			curr_node_score = 0
+			curr_node_weight = 0
 
 		### add the score / weight of the current node to the accumulated score
 		score  += curr_node_score * curr_node_weight
@@ -88,10 +97,41 @@ class ClusterAmbiguity():
 
 		return score, weight, coords
 
-	def __compute_score(self, coords1, coords2):
+	def __compute_score(self, coords_1, coords_2):
 		"""
 		compute the score of the two given coordinates
 		"""
+		## extract keys
+		F_1 = list(coords_1.keys())
+		F_2 = list(coords_2.keys())
+		F_list = list(set(F_1 + F_2))
+		F_list = np.sort(F_list)[::-1]
+		m_list = []
+		# print("==============")
+		# print(F_list)
+		# print(coords_1)
+		# print(coords_2)
+
+
+		## compute the measure scores corresponds to F values
+		curr_cluster_1 = []
+		curr_cluster_2 = []
+		for F in F_list: 
+			### update the current clusters 1 and 2
+			if F in F_1:
+				curr_cluster_1 += coords_1[F]
+			if F in F_2:
+				curr_cluster_2 += coords_2[F]
+			if len(curr_cluster_1) == 0 or len(curr_cluster_2) == 0:
+				m_list.append(-100)
+				continue
+			m_list.append(clm.silhouette(curr_cluster_1, curr_cluster_2, self.grid))
+		
+		print("----------------")
+			### compute the score
+
+
+
 		return 0.5
 
 	def __get_weight(self, coords_list):
