@@ -3,7 +3,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_val_score, cross_val_predict
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.neural_network import MLPRegressor
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
 from sklearn.svm import SVR
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.preprocessing import StandardScaler
@@ -103,6 +103,17 @@ def run_knn_regression(input_arr):
 	score = cross_val_score(reg, i, t, cv=5)
 	plot(t, t_pred, score, "knn_regression")
 
+def run_extra_trees_regression(input_arr):
+	"""
+	Train a extra trees regression model on the input variables 
+	perform cross-validation on the target variable
+	"""
+	i, t = read_variables(input_arr)
+	reg = ExtraTreesRegressor(n_estimators=100)
+	t_pred = cross_val_predict(reg, i, t, cv=5)
+	score = cross_val_score(reg, i, t, cv=5)
+	plot(t, t_pred, score, "extra_trees_regression")
+
 
 
 with_scaling_arr = [
@@ -111,24 +122,32 @@ with_scaling_arr = [
 	"scaling_diff", 
 	"mean_diff", 
 	"scaling_size", 
+	"scaling_size_diff",
 	"mean_diff_scaling_ratio",
 	"ellipticity_average",
 	"ellipticity_diff",
 	"density_diff",
 	"density_average",
+	"rotation_average",
+	"gaussian_mean_vector_angle_diff",
+	"gaussian_mean_vector_angle_average"
 ]
 
 with_scaling_arr = [
-	"rotation_diff", 
-	"weight_diff", 
-	"scaling_diff", 
-	"mean_diff", 
-	"scaling_size", 
-	"mean_diff_scaling_ratio",
-	"ellipticity_average",
-	"ellipticity_diff",
-	"density_diff",
+	"rotation_diff", ## X 
+	"weight_diff", ## X
+	"scaling_diff",  ## X
+	"mean_diff", ## O
+	"scaling_size", ## X
+	"scaling_size_diff", ## X
+	"mean_diff_scaling_ratio", ## O
+	"ellipticity_average", ## X
+	"ellipticity_diff", ## X
+	"density_diff", # X
 	"density_average",
+	"rotation_average",
+	"gaussian_mean_vector_angle_diff",
+	"gaussian_mean_vector_angle_average"
 ]
 # with_scaling_arr = ["rotation_diff", "density_diff", "scaling_diff", "mean_diff_scaling_ratio"]
 
@@ -137,5 +156,5 @@ run_polynomial_regression(with_scaling_arr, 2)
 run_mlp_regression(with_scaling_arr)
 run_random_forest_regression(with_scaling_arr)
 run_svr_regression(with_scaling_arr)
-
 run_knn_regression(with_scaling_arr)
+run_extra_trees_regression(with_scaling_arr)
