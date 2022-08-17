@@ -85,20 +85,38 @@ def extract_single(datum):
 		"rotation_degree": [decompose_0["rotation_degree"], decompose_1["rotation_degree"]]
 	}
 
+def scale_datum(datum):
+	"""
+	scale the datum to the range of [0, 1]
+	"""
+	min_x = min(datum[:, 0])
+	max_x = max(datum[:, 0])
+	min_y = min(datum[:, 1])
+	max_y = max(datum[:, 1])
+	range_x = max_x - min_x
+	range_y = max_y - min_y
+	min_for_scale = min_x if range_x > range_y else min_y
+	max_for_scale = max_x if range_x > range_y else max_y
+	scaled_datum = (datum - min_for_scale) / (max_for_scale - min_for_scale)
+	return scaled_datum
+
+
 def extract(is_draw=False):
 	"""
 	extract the gaussian info and store it with original data in json format
 	"""
 	data = rd.read_clustme_data()
 	for i, datum in enumerate(data):
+		datum["data"] = scale_datum(datum["data"])
 		gmm, gaussian_info = extract_single(datum["data"])
 		if is_draw:
 			plot_gmm(gmm, datum["data"], gaussian_info["proba_labels"])
 			plt.savefig("./plot_individual/" + str(i) + ".png")
+			# plt.savefig("./plot_individual_with_score/" + str(datum["prob_single"]) + ".png")
 			plt.clf()
 		datum["gaussian_info"] = gaussian_info
 		datum["data"] = datum["data"].tolist()
 		with open("./extracted/" + str(i) + ".json", "w") as f:
 			json.dump(datum, f)
 
-extract(False)
+extract(True)
