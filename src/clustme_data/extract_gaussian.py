@@ -89,7 +89,7 @@ def extract(is_draw=False):
 	extract the gaussian info and store it with original data in json format
 	"""
 	data = rd.read_clustme_data()
-	for i, datum in enumerate(data[:300]):
+	for i, datum in enumerate(data):
 		gmm, gaussian_info = extract_single(datum["data"])
 		if is_draw:
 			plot_gmm(gmm, datum["data"], gaussian_info["proba_labels"])
@@ -100,4 +100,4 @@ def extract(is_draw=False):
 		with open("./extracted/" + str(i) + ".json", "w") as f:
 			json.dump(datum, f)
 
-extract(True)
+# extract(True)
