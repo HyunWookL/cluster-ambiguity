@@ -79,6 +79,7 @@ def extract_single(datum):
 		"covariances": covariances.tolist(),
 		"labels": labels.tolist(),
 		"proba_labels": proba_based_label.tolist(),
+		"weights": gmm.weights_.tolist(),
 		"scaling": [decompose_0["scaling"], decompose_1["scaling"]],
 		"rotation": [decompose_0["rotation"], decompose_1["rotation"]],
 		"rotation_degree": [decompose_0["rotation_degree"], decompose_1["rotation_degree"]]
@@ -100,4 +101,4 @@ def extract(is_draw=False):
 		with open("./extracted/" + str(i) + ".json", "w") as f:
 			json.dump(datum, f)
 
-# extract(True)
+extract(False)
