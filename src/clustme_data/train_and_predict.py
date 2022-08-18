@@ -1,4 +1,11 @@
 import pandas as pd
+import autosklearn.regression
+import matplotlib.pyplot as plt
+import copy
+import pickle
+ 
+
+
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_val_score, cross_val_predict
 from sklearn.preprocessing import PolynomialFeatures
@@ -8,10 +15,7 @@ from sklearn.svm import SVR
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.preprocessing import StandardScaler
 
-import autosklearn.regression
 
-
-import matplotlib.pyplot as plt
 
 def read_variables(input_arr):
 	"""
@@ -124,20 +128,30 @@ def run_autosklearn_based_regression(input_arr):
 	"""
 	i, t = read_variables(input_arr)
 	reg = autosklearn.regression.AutoSklearnRegressor(
-		time_left_for_this_task=300,                              
+		time_left_for_this_task=600,                              
 		per_run_time_limit=30,
 		memory_limit=None,
 		resampling_strategy='cv',
 		resampling_strategy_arguments={'folds': 5})
 	reg.fit(i, t)
-	t_pred = reg.predict(i)
-	score = reg.score(i, t)
+
+
+	with open("./regression_model/autosklearn.pkl", "wb") as f:
+		pickle.dump(reg, f)
+
+	with open("./regression_model/autosklearn.pkl", "rb") as f:
+		reg_load = pickle.load(f)
+
+	t_pred = reg_load.predict(i)
+	score = reg_load.score(i, t)
 	plot(t, t_pred, score, "autosklearn_regression")
+
+	return score
 
 
 with_scaling_arr = [
 	"rotation_diff", 
-	"weight_diff", 
+	# "weight_diff", 
 	"scaling_diff", 
 	"mean_diff", 
 	"scaling_size", 
@@ -153,22 +167,27 @@ with_scaling_arr = [
 ]
 
 with_scaling_arr = [
-	"rotation_diff", ## X 
-	"weight_diff", ## X
-	"scaling_diff",  ## X
-	"mean_diff", ## O
-	"scaling_size", ## X
-	"scaling_size_diff", ## X
-	"mean_diff_scaling_ratio", ## O
-	"ellipticity_average", ## X
-	"ellipticity_diff", ## X
-	"density_diff", # X
+	"rotation_diff", 
+	"scaling_diff", 
+	"mean_diff", 
+	"scaling_size", 
+	"scaling_size_diff",
+	"mean_diff_scaling_ratio",
+	"ellipticity_average",
+	"ellipticity_diff",
+	"density_diff",
 	"density_average",
 	"rotation_average",
 	"gaussian_mean_vector_angle_diff",
 	"gaussian_mean_vector_angle_average",
 ]
-# with_scaling_arr = ["rotation_diff", "density_diff", "scaling_diff", "mean_diff_scaling_ratio"]
+
+# find_best_variable_combination(with_scaling_arr)
+
+
+
+
+# with_scaling_arr = ["rotation_diff", "density_diff", "scaling_diff", "mean_diff"]
 
 # run_linear_regression(with_scaling_arr)
 # run_polynomial_regression(with_scaling_arr, 2)
@@ -178,4 +197,4 @@ with_scaling_arr = [
 # run_knn_regression(with_scaling_arr)
 # run_extra_trees_regression(with_scaling_arr)
 
-run_autosklearn_based_regression(with_scaling_arr)
+print(run_autosklearn_based_regression(with_scaling_arr))

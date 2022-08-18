@@ -15,7 +15,7 @@ def construct_variables():
 	"""
 	rotation_diff_list = []
 	rotation_average_list = []
-	weight_diff_list = []
+	# weight_diff_list = []
 	scaling_diff_list = []
 	scaling_x_diff_list = []
 	scaling_y_diff_list = []
@@ -46,7 +46,7 @@ def construct_variables():
 			rotation_average = (gaussian_info["rotation"][0] + gaussian_info["rotation"][1]) / 2
 
 			## extract density difference
-			weight_diff = np.abs(gaussian_info["weights"][0] - gaussian_info["weights"][1]) / (gaussian_info["weights"][0] + gaussian_info["weights"][1])
+			# weight_diff = np.abs(gaussian_info["weights"][0] - gaussian_info["weights"][1]) / (gaussian_info["weights"][0] + gaussian_info["weights"][1])
 
 			## extract scaling difference			
 			scaling_x_diff = gaussian_info["scaling"][0][0] - gaussian_info["scaling"][1][0]
@@ -91,7 +91,7 @@ def construct_variables():
 
 			rotation_diff_list.append(rotation_diff)
 			rotation_average_list.append(rotation_average)
-			weight_diff_list.append(weight_diff)
+			# weight_diff_list.append(weight_diff)
 			scaling_diff_list.append(scaling_diff)
 			scaling_x_diff_list.append(scaling_x_diff)
 			scaling_y_diff_list.append(scaling_y_diff)
@@ -113,7 +113,7 @@ def construct_variables():
 	df = pd.DataFrame({
 		"rotation_diff": rotation_diff_list,
 		"rotation_average": rotation_average_list,
-		"weight_diff": weight_diff_list,
+		# "weight_diff": weight_diff_list,
 		"scaling_diff": scaling_diff_list,
 		"scaling_x_diff": scaling_x_diff_list,
 		"scaling_y_diff": scaling_y_diff_list,
