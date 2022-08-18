@@ -34,3 +34,14 @@ def plot_gmm(gmm, X, labels, label=True, ax=None):
     w_factor = 0.2 / gmm.weights_.max()
     for pos, covar, w in zip(gmm.means_, gmm.covariances_, gmm.weights_):
         draw_ellipse(pos, covar, alpha=w * w_factor)
+				
+    return ax
+
+
+def plot_gmm_graph(gmm, X, labels, label=True, means=None, edges=None ,ax=None):
+		ax = plot_gmm(gmm, X, labels, label, ax)
+
+		for edge in edges:
+			edge = edge.split("_")
+			datum = np.array([means[int(edge[0])], means[int(edge[1])]])
+			ax.plot(*datum.T, c="black")

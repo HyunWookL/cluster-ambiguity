@@ -2,6 +2,9 @@ import numpy as np
 from sklearn.mixture import GaussianMixture
 from bayes_opt import BayesianOptimization
 from kneed import KneeLocator
+from scipy.spatial import Delaunay
+
+from helpers import decompose_covariance_matrix
 
 class ClusterAmbiguity():
 	"""
@@ -45,7 +48,8 @@ class ClusterAmbiguity():
 
 		## extract gaussian infos
 		self.__extract_gaussian_info()
-		
+		## construct the gabriel graph for future filtering
+		self.__construct_gabriel_graph()
 
 	def __extract_gaussian_info(self):
 		"""
@@ -70,6 +74,49 @@ class ClusterAmbiguity():
 				if pivot < proba_incremental[j]:
 					self.gaussian_info["proba_labels"].append(j)
 					break
+		
+		## add scaling and rotation
+		self.gaussian_info["scaling"] = []
+		self.gaussian_info["rotation"] = []
+		self.gaussian_info["rotation_degree"] = []
+		for cov in self.convariances:
+			scaling, rotation, rotation_degree = decompose_covariance_matrix(cov)
+			self.gaussian_info["scaling"].append(scaling)
+			self.gaussian_info["rotation"].append(rotation)
+			self.gaussian_info["rotation_degree"].append(rotation_degree)
+	
+	def __construct_gabriel_graph(self):
+		"""
+		get the pairs of gaussian components that should be compared to compute the cluster ambiguity
+		based on the overlap of ellipse and 
+		"""
+		tri = Delaunay(self.means)
+		gabriel_graph_edges = {}
+		for simplex in tri.simplices:
+			gabriel_graph_edges[f"{simplex[0]}_{simplex[1]}"] = True
+			gabriel_graph_edges[f"{simplex[1]}_{simplex[2]}"] = True
+			gabriel_graph_edges[f"{simplex[2]}_{simplex[0]}"] = True
+
+		def check_within_circle(target, v1, v2):
+			center = (np.array(v1) + np.array(v2)) / 2
+			radius = np.linalg.norm(np.array(v1) - np.array(v2)) / 2
+			return np.linalg.norm(target - center) < radius
+		
+		for simplex in tri.simplices:
+			if check_within_circle(self.means[simplex[2]], self.means[simplex[0]], self.means[simplex[1]]):
+				gabriel_graph_edges[f"{simplex[0]}_{simplex[1]}"] = False
+			if check_within_circle(self.means[simplex[1]], self.means[simplex[0]], self.means[simplex[2]]):
+				gabriel_graph_edges[f"{simplex[2]}_{simplex[0]}"] = False
+			if check_within_circle(self.means[simplex[0]], self.means[simplex[1]], self.means[simplex[2]]):
+				gabriel_graph_edges[f"{simplex[1]}_{simplex[2]}"] = False
+
+		self.gabriel_graph_edges = set()
+		for key in gabriel_graph_edges:
+			if gabriel_graph_edges[key]:
+				self.gabriel_graph_edges.add(key)
+		
+
+
 
 
 

@@ -6,25 +6,8 @@ import numpy as np
 import json
 import visualize_gmm as vg
 
-"""
-Functions for extracting gaussian infos from clustme
-"""
+from helpers import decompose_covariance_matrix
 
-def decompose_covariance_matrix(covariance_matrix):
-	"""
-	decompose the covariance matrix into its principal components
-	"""
-	U, s, Vt = np.linalg.svd(covariance_matrix, full_matrices=True)
-	scaling = np.sqrt(s).tolist()
-	rotation = np.arccos(U[0, 1])
-	rotation_degree = rotation * (180 / np.pi)
-
-	return {
-		"scaling": scaling,
-		"rotation": rotation,
-		"rotation_degree": rotation_degree
-	}
-	
 
 def extract_single(datum):
 	"""
@@ -47,9 +30,9 @@ def extract_single(datum):
 		"labels": labels.tolist(),
 		"proba_labels": proba_based_label.tolist(),
 		"weights": gmm.weights_.tolist(),
-		"scaling": [decompose_0["scaling"], decompose_1["scaling"]],
-		"rotation": [decompose_0["rotation"], decompose_1["rotation"]],
-		"rotation_degree": [decompose_0["rotation_degree"], decompose_1["rotation_degree"]]
+		"scaling": [decompose_0[0], decompose_1[0]],
+		"rotation": [decompose_0[1], decompose_1[1]],
+		"rotation_degree": [decompose_0[2], decompose_1[2]]
 	}
 
 def scale_datum(datum):

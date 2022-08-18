@@ -113,7 +113,7 @@ def construct_variables():
 	df = pd.DataFrame({
 		"rotation_diff": rotation_diff_list,
 		"rotation_average": rotation_average_list,
-		# "weight_diff": weight_diff_list,
+		# "weight_diff": weiht_diff_list,
 		"scaling_diff": scaling_diff_list,
 		"scaling_x_diff": scaling_x_diff_list,
 		"scaling_y_diff": scaling_y_diff_list,
