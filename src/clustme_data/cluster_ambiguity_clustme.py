@@ -24,20 +24,8 @@ class ClusterAmbiguity():
 	def fit(self, data):
 		self.data = data
 
-		## perform gmm from n_comp=1 to n_comp = np.sqrt(len(data)) to find optimal n_comp
-		## bic is used for the criteria
-		x_list = list(range(1, int(np.sqrt(len(data)))))
-		y_list = []
-		for n_comp in x_list:
-			gmm = GaussianMixture(n_components=n_comp, covariance_type='full')
-			gmm.fit(data)
-			bic = gmm.bic(data)
-			y_list.append(bic)
-		
-		## find the optimal elbow value based on kneedle algorithm
-		## Satopaa, Ville, et al. "Finding a" kneedle" in a haystack: Detecting knee points in system behavior." 2011 31st international conference on distributed computing systems workshops. IEEE, 2011.
-		kneedle = KneeLocator(x_list, y_list, curve='convex', direction='decreasing')
-		self.optimal_n_comp = kneedle.knee
+		## find optimal n_comp
+		self.__find_optimal_n_comp()		
 		
 		## perform gmm with optimal n_comp and extract the infos
 		self.gmm = GaussianMixture(n_components=self.optimal_n_comp, covariance_type='full')
@@ -50,6 +38,23 @@ class ClusterAmbiguity():
 		self.__extract_gaussian_info()
 		## construct the gabriel graph for future filtering
 		self.__construct_gabriel_graph()
+
+	def __find_optimal_n_comp(self):
+		## perform gmm from n_comp=1 to n_comp = np.sqrt(len(data)) to find optimal n_comp
+		## bic is used for the criteria
+		x_list = list(range(1, int(np.sqrt(len(self.data)))))
+		y_list = []
+		for n_comp in x_list:
+			gmm = GaussianMixture(n_components=n_comp, covariance_type='full')
+			gmm.fit(self.data)
+			bic = gmm.bic(self.data)
+			y_list.append(bic)
+		
+		## find the optimal elbow value based on kneedle algorithm
+		## Satopaa, Ville, et al. "Finding a" kneedle" in a haystack: Detecting knee points in system behavior." 2011 31st international conference on distributed computing systems workshops. IEEE, 2011.
+		kneedle = KneeLocator(x_list, y_list, curve='convex', direction='decreasing')
+		self.optimal_n_comp = kneedle.knee
+
 
 	def __extract_gaussian_info(self):
 		"""
