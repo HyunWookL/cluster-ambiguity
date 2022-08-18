@@ -149,22 +149,7 @@ def run_autosklearn_based_regression(input_arr):
 	return score
 
 
-with_scaling_arr = [
-	"rotation_diff", 
-	# "weight_diff", 
-	"scaling_diff", 
-	"mean_diff", 
-	"scaling_size", 
-	"scaling_size_diff",
-	"mean_diff_scaling_ratio",
-	"ellipticity_average",
-	"ellipticity_diff",
-	"density_diff",
-	"density_average",
-	"rotation_average",
-	"gaussian_mean_vector_angle_diff",
-	"gaussian_mean_vector_angle_average",
-]
+
 
 with_scaling_arr = [
 	"rotation_diff", 
