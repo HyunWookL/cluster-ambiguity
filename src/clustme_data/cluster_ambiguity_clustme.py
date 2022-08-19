@@ -34,7 +34,7 @@ class ClusterAmbiguity():
 	A class for computing cluster ambiguity based on clustme data
 	"""
 
-	def __init__(self, corr_thld=0.05, verbose=0, random_state=0):
+	def __init__(self, corr_thld=0.05, verbose=0, random_state=0, S=3.0):
 		"""
 		INPUT:
 		- corr_thld: the threshold determining the correlation between two clusters
@@ -45,19 +45,21 @@ class ClusterAmbiguity():
 		"""
 		self.corr_thrl = corr_thld
 		self.verbose = (verbose == 0)
+		self.random_state = random_state
+		self.S = S
 		## load regression model
 		with open("./regression_model/autosklearn.pkl", "rb") as f:
 			self.reg_model = pickle.load(f)
 
 	def fit(self, data):
-		np.random.seed(0)
+		np.random.seed(self.random_state)
 		self.data = data
 		## find optimal n_comp
 		self.__find_optimal_n_comp()		
 		
 
 		## perform gmm with optimal n_comp and extract the infos
-		self.gmm = GaussianMixture(n_components=self.optimal_n_comp, covariance_type='full', random_state=0)
+		self.gmm = GaussianMixture(n_components=self.optimal_n_comp, covariance_type='full', random_state=self.random_state)
 		self.gmm.fit(data)
 		self.convariances = self.gmm.covariances_
 		self.means 				= self.gmm.means_
@@ -84,14 +86,14 @@ class ClusterAmbiguity():
 		x_list = list(range(1, int(np.sqrt(len(self.data)))))
 		y_list = []
 		for n_comp in x_list:
-			gmm = GaussianMixture(n_components=n_comp, covariance_type='full', random_state=0)
+			gmm = GaussianMixture(n_components=n_comp, covariance_type='full', random_state=self.random_state)
 			gmm.fit(self.data)
 			bic = gmm.bic(self.data)
 			y_list.append(bic)
 		
 		## find the optimal elbow value based on kneedle algorithm
 		## Satopaa, Ville, et al. "Finding a" kneedle" in a haystack: Detecting knee points in system behavior." 2011 31st international conference on distributed computing systems workshops. IEEE, 2011.
-		kneedle = KneeLocator(x_list, y_list, curve='convex', direction='decreasing')
+		kneedle = KneeLocator(x_list, y_list, curve='convex', direction='decreasing', S=self.S)
 		self.optimal_n_comp = kneedle.knee
 
 
@@ -170,6 +172,8 @@ class ClusterAmbiguity():
 		"""
 		self.pair_key_list = []
 		self.prob_single_score_list = []
+
+		input_variables_arr_list = []
 		for i in range(self.optimal_n_comp):
 			for j in range(i+1, self.optimal_n_comp):
 				new_gaussian_info = hp.normalize_gaussian_info(self.gaussian_info, i, j, self.data)
@@ -177,10 +181,10 @@ class ClusterAmbiguity():
 				input_variables_arr = []
 				for var_name in INPUT_ARR:
 					input_variables_arr.append(input_variables_dict[var_name])
-
-				score = self.reg_model.predict([input_variables_arr])[0]
+				input_variables_arr_list.append(input_variables_arr)
 				self.pair_key_list.append(f"{i}_{j}")
-				self.prob_single_score_list.append(score)
+
+		self.prob_single_score_list = self.reg_model.predict(input_variables_arr_list)
 		
 		return
 
