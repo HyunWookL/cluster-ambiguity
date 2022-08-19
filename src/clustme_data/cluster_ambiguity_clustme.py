@@ -1,6 +1,5 @@
 import numpy as np 
 from sklearn.mixture import GaussianMixture
-from bayes_opt import BayesianOptimization
 from kneed import KneeLocator
 from scipy.spatial import Delaunay
 
@@ -35,40 +34,49 @@ class ClusterAmbiguity():
 	A class for computing cluster ambiguity based on clustme data
 	"""
 
-	def __init__(self, corr_thld=0.05, verbose=0):
+	def __init__(self, corr_thld=0.05, verbose=0, random_state=0):
 		"""
 		INPUT:
 		- corr_thld: the threshold determining the correlation between two clusters
 		  - if the correlation is below the threshold, the two clusters are considered not 
 			  to be correlated unless they are linked by gabriel graph
 		- verbose: 0 if no verbose, > 0 if verbose
+		- random_state: input None if dont want to set the random state
 		"""
 		self.corr_thrl = corr_thld
 		self.verbose = (verbose == 0)
-		
 		## load regression model
 		with open("./regression_model/autosklearn.pkl", "rb") as f:
 			self.reg_model = pickle.load(f)
 
 	def fit(self, data):
+		np.random.seed(0)
 		self.data = data
-
 		## find optimal n_comp
 		self.__find_optimal_n_comp()		
 		
+
 		## perform gmm with optimal n_comp and extract the infos
-		self.gmm = GaussianMixture(n_components=self.optimal_n_comp, covariance_type='full')
+		self.gmm = GaussianMixture(n_components=self.optimal_n_comp, covariance_type='full', random_state=0)
 		self.gmm.fit(data)
 		self.convariances = self.gmm.covariances_
 		self.means 				= self.gmm.means_
 		self.proba 				= self.gmm.predict_proba(data)
 
+
 		## extract gaussian infos
 		self.__extract_gaussian_info()
+		## return if n_comp is 1 (with perfect score)
+		if(self.optimal_n_comp == 1):
+			return 1
 		## construct the gabriel graph for future filtering
 		self.__construct_gabriel_graph()
 		## run the pairwise cluster ambiguity computation
 		self.__compute_pairwise_cluster_ambiguity()
+
+		## run final score
+		return self.__final_score()
+		
 
 	def __find_optimal_n_comp(self):
 		## perform gmm from n_comp=1 to n_comp = np.sqrt(len(data)) to find optimal n_comp
@@ -76,7 +84,7 @@ class ClusterAmbiguity():
 		x_list = list(range(1, int(np.sqrt(len(self.data)))))
 		y_list = []
 		for n_comp in x_list:
-			gmm = GaussianMixture(n_components=n_comp, covariance_type='full')
+			gmm = GaussianMixture(n_components=n_comp, covariance_type='full', random_state=0)
 			gmm.fit(self.data)
 			bic = gmm.bic(self.data)
 			y_list.append(bic)
@@ -160,21 +168,35 @@ class ClusterAmbiguity():
 		"""
 		compute the pairwise cluster ambiguity
 		"""
-		pair_key_list = []
-		score_list = []
+		self.pair_key_list = []
+		self.prob_single_score_list = []
 		for i in range(self.optimal_n_comp):
 			for j in range(i+1, self.optimal_n_comp):
-				input_variables_dict = hp.construct_reg_input_variables(self.gaussian_info, i, j)
+				new_gaussian_info = hp.normalize_gaussian_info(self.gaussian_info, i, j, self.data)
+				input_variables_dict = hp.construct_reg_input_variables(new_gaussian_info, 0, 1)
 				input_variables_arr = []
 				for var_name in INPUT_ARR:
 					input_variables_arr.append(input_variables_dict[var_name])
 
-				print(input_variables_arr)
-				score = self.reg_model.predict([input_variables_arr])
-				pair_key_list.append(f"{i}_{j}")
-				score_list.append(score)
+				score = self.reg_model.predict([input_variables_arr])[0]
+				self.pair_key_list.append(f"{i}_{j}")
+				self.prob_single_score_list.append(score)
+		
+		return
 
-				print("pair:", i, j, "score:", score)
+	def __final_score(self):
+		"""
+		compute the final score
+		"""
+		self.filtered_prob_single_list = []
+		for i, prob_single_score in enumerate(self.prob_single_score_list):
+			if prob_single_score > self.corr_thrl or self.pair_key_list[i] in self.gabriel_graph_edges:
+				self.filtered_prob_single_list.append(prob_single_score)
+
+		ambiguity_score_list = np.abs(np.array(self.filtered_prob_single_list) - 0.5) * 2
+		self.ambiguity_score = np.mean(ambiguity_score_list)
+		
+		return self.ambiguity_score
 
 
 

@@ -71,3 +71,53 @@ def construct_reg_input_variables(gaussian_info, idx_0, idx_1):
 		"gaussian_mean_vector_angle_diff": gaussian_mean_vector_angle_diff,
 		"gaussian_mean_vector_angle_average": gaussian_mean_vector_angle_average,
 	}
+
+def normalize_gaussian_info(gaussian_info, idx_0, idx_1, data):
+	"""
+	normalize the gaussian info based on given data
+	"""
+	labels = np.array(gaussian_info["proba_labels"])
+	filter_array = np.logical_or(labels == idx_0, labels == idx_1)
+	data_filtered = np.array(data)[filter_array]
+	label_filtered = np.array(labels)[filter_array]
+	max_for_scale, min_for_scale = __get_scale_factor(data_filtered)
+
+	## substitute idx_0 and idx_1 to the labels
+	label_filtered = (label_filtered == idx_1).astype(int)
+
+	new_gaussian_info = {}
+	
+	mean_0 = (np.array(gaussian_info["means"][idx_0]) - min_for_scale) / (max_for_scale - min_for_scale)
+	mean_1 = (np.array(gaussian_info["means"][idx_1]) - min_for_scale) / (max_for_scale - min_for_scale)
+	new_gaussian_info["means"] = [mean_0.tolist(), mean_1.tolist()]
+
+	# scaling_0 = (np.square(np.array(gaussian_info["scaling"][idx_0])) - min_for_scale) / (max_for_scale - min_for_scale)
+	# scaling_1 = (np.square(np.array(gaussian_info["scaling"][idx_1])) - min_for_scale) / (max_for_scale - min_for_scale)
+	scaling_0 = np.array(gaussian_info["scaling"][idx_0]) / (max_for_scale - min_for_scale)
+	scaling_1 = np.array(gaussian_info["scaling"][idx_1]) / (max_for_scale - min_for_scale)
+	new_gaussian_info["scaling"] = [scaling_0.tolist(), scaling_1.tolist()]
+
+	# print(new_gaussian_info["scaling"])
+
+	new_gaussian_info["rotation"] = [gaussian_info["rotation"][idx_0], gaussian_info["rotation"][idx_1]]
+	new_gaussian_info["rotation_degree"] = [gaussian_info["rotation_degree"][idx_0], gaussian_info["rotation_degree"][idx_1]]
+	new_gaussian_info["proba_labels"] = label_filtered.tolist()
+
+	return new_gaussian_info
+
+
+
+def __get_scale_factor(datum):
+	"""
+	get the scale factor of the data
+	"""
+	min_x = min(datum[:, 0])
+	max_x = max(datum[:, 0])
+	min_y = min(datum[:, 1])
+	max_y = max(datum[:, 1])
+	range_x = max_x - min_x
+	range_y = max_y - min_y
+	min_for_scale = min_x if range_x > range_y else min_y
+	max_for_scale = max_x if range_x > range_y else max_y
+
+	return max_for_scale, min_for_scale
