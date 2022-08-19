@@ -70,7 +70,7 @@ class ClusterAmbiguity():
 		self.__extract_gaussian_info()
 		## return if n_comp is 1 (with perfect score)
 		if(self.optimal_n_comp == 1):
-			return 1
+			return 0
 		## construct the gabriel graph for future filtering
 		self.__construct_gabriel_graph()
 		## run the pairwise cluster ambiguity computation
@@ -198,7 +198,7 @@ class ClusterAmbiguity():
 				self.filtered_prob_single_list.append(prob_single_score)
 
 		ambiguity_score_list = np.abs(np.array(self.filtered_prob_single_list) - 0.5) * 2
-		self.ambiguity_score = np.mean(ambiguity_score_list)
+		self.ambiguity_score = 1 - np.mean(ambiguity_score_list)
 		
 		return self.ambiguity_score
 

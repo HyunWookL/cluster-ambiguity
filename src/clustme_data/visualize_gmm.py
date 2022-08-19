@@ -33,7 +33,7 @@ def plot_gmm(gmm, X, labels, label=True, ax=None):
     
     w_factor = 0.2 / gmm.weights_.max()
     for pos, covar, w in zip(gmm.means_, gmm.covariances_, gmm.weights_):
-        draw_ellipse(pos, covar, alpha=w * w_factor)
+        draw_ellipse(pos, covar, ax=ax, alpha=w * w_factor)
 				
     return ax
 
