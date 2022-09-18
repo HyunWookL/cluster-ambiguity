@@ -16,7 +16,7 @@ class AmbReducer():
 	Ambreducer class
 	"""
 
-	def __init__(self, method="umap", metric="snc", threshold_loss=0.05, S=3.0, verbose=0, init_points=6, n_iter=30):
+	def __init__(self, method="umap", metric="snc", threshold_loss=0.05, S=3.0, verbose=0, init_points=8, n_iter=40):
 		"""
 		Get the method and metric that want to be optimized
 		"""
@@ -86,9 +86,11 @@ class AmbReducer():
 
 		### get initial loss
 		self.init_loss = self.__get_loss(self.raw, self.emb)
+		self.threshold_loss = self.init_loss * self.threshold_loss
 
-		print("initial loss", self.init_loss)
-
+		### get initial ambiguity
+		ca = clams.ClusterAmbiguity(verbose=self.verbose, S=self.S)
+		self.initial_ambiguity = ca.fit(self.emb)
 
 		optimizer = BayesianOptimization(
 			f=__get_loss_wrapper,
@@ -108,7 +110,7 @@ class AmbReducer():
 
 		
 		ca_final = clams.ClusterAmbiguity(verbose=self.verbose, S=self.S)
-		self.ambiguity = ca_final.fit(self.new_emb)	
+		self.final_ambiguity = ca_final.fit(self.new_emb)	
 	
 	def get_new_emb(self):
 		return self.new_emb
@@ -120,7 +122,8 @@ class AmbReducer():
 			"init_loss": self.init_loss,
 			"final_loss": self.final_loss,
 			"max_hyperparameter": self.max_hyperparameter,
-			"ambiguity": self.ambiguity
+			"initial_embiguity": self.initial_ambiguity,
+			"final_ambiguity": self.final_ambiguity
 		}
 
 
