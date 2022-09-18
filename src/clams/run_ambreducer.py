@@ -37,8 +37,8 @@ def find_best_embedding(raw, method="tsne", verbose=2, init_points=8, n_iter=40)
 
 def run(raw, method="tsne", metric="snc", threshold_loss=0.10, S=3.0, verbose=2, init_points=8, n_iter=40):
 	emb, max_hyperparameter = find_best_embedding(raw, method=method, verbose=verbose, init_points=init_points, n_iter=n_iter)
-	amb = ambr.AmbReducer(emb, metric=metric, threshold_loss=threshold_loss, S=S, verbose=verbose, init_points=init_points, n_iter=n_iter)
-	amb.fit()
+	amb = ambr.AmbReducer(method=method, metric=metric, threshold_loss=threshold_loss, S=S, verbose=verbose, init_points=init_points, n_iter=n_iter)
+	amb.fit(raw, emb)
 	amb.optimize()
 	results = amb.get_infos()
 	results["init_max_hyperparameter"] = max_hyperparameter
