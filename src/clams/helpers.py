@@ -91,13 +91,10 @@ def normalize_gaussian_info(gaussian_info, idx_0, idx_1, data):
 	mean_1 = (np.array(gaussian_info["means"][idx_1]) - min_for_scale) / (max_for_scale - min_for_scale)
 	new_gaussian_info["means"] = [mean_0.tolist(), mean_1.tolist()]
 
-	# scaling_0 = (np.square(np.array(gaussian_info["scaling"][idx_0])) - min_for_scale) / (max_for_scale - min_for_scale)
-	# scaling_1 = (np.square(np.array(gaussian_info["scaling"][idx_1])) - min_for_scale) / (max_for_scale - min_for_scale)
 	scaling_0 = np.array(gaussian_info["scaling"][idx_0]) / (max_for_scale - min_for_scale)
 	scaling_1 = np.array(gaussian_info["scaling"][idx_1]) / (max_for_scale - min_for_scale)
 	new_gaussian_info["scaling"] = [scaling_0.tolist(), scaling_1.tolist()]
 
-	# print(new_gaussian_info["scaling"])
 
 	new_gaussian_info["rotation"] = [gaussian_info["rotation"][idx_0], gaussian_info["rotation"][idx_1]]
 	new_gaussian_info["rotation_degree"] = [gaussian_info["rotation_degree"][idx_0], gaussian_info["rotation_degree"][idx_1]]
