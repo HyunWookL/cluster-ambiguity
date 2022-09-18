@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import json
-import visualize_gmm as vg
+import visualize as vg
 
 from helpers import decompose_covariance_matrix
 
