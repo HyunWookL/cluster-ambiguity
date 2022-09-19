@@ -101,13 +101,15 @@ class AmbReducer():
 
 		optimizer.maximize(init_points=self.init_points, n_iter=self.n_iter)
 
-		self.final_loss = optimizer.max["target"]
+		
 		self.max_hyperparameter = optimizer.max["params"]
 		if self.method == "tsne":
 			self.new_emb = TSNE(n_components=2, perplexity=self.max_hyperparameter["perplexity"], init=self.emb).fit_transform(self.raw)
 		elif self.method == "umap":
 			self.new_emb = umap.UMAP(n_components=2, n_neighbors=int(self.max_hyperparameter["n_neighbors"]), min_dist=self.max_hyperparameter["min_dist"], init=self.emb).fit_transform(self.raw)
 
+		self.final_loss = self.__get_loss(self.raw, self.new_emb)
+		
 		
 		ca_final = clams.ClusterAmbiguity(verbose=self.verbose, S=self.S)
 		self.final_ambiguity = ca_final.fit(self.new_emb)	
