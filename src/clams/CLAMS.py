@@ -11,6 +11,8 @@ importlib.reload(hp)
 
 import pickle
 
+from scipy.stats import entropy
+
 
 INPUT_ARR = [
 	"rotation_diff", 
@@ -34,7 +36,7 @@ class ClusterAmbiguity():
 	A class for computing cluster ambiguity based on clustme data
 	"""
 
-	def __init__(self, corr_thld=0.05, verbose=0, random_state=0, S=3.0):
+	def __init__(self, corr_thld=0.05, verbose=0, random_state=0, S=3.0, mode="average"):
 		"""
 		INPUT:
 		- corr_thld: the threshold determining the correlation between two clusters
@@ -47,6 +49,7 @@ class ClusterAmbiguity():
 		self.verbose = (verbose == 0)
 		self.random_state = random_state
 		self.S = S
+		self.mode = mode
 		## load regression model
 		with open("./regression_model/autosklearn.pkl", "rb") as f:
 			self.reg_model = pickle.load(f)
@@ -188,6 +191,34 @@ class ClusterAmbiguity():
 		
 		return
 
+	def __average_ambiguity(self):
+		"""
+		Compute the ambiguity based on average
+		"""
+		ambiguity_score_list = np.abs(np.array(self.filtered_prob_single_list) - 0.5) * 2
+		self.ambiguity_score = 1 - np.mean(ambiguity_score_list)
+
+		return self.ambiguity_score
+
+	def __entropy_ambiguity(self):
+		"""
+		Compute the ambiguity based on entropy
+		"""
+		self.filtered_prob_single_list = np.array(self.filtered_prob_single_list)
+		self.filtered_prob_single_list[self.filtered_prob_single_list < 0] = 1e-5
+		self.filtered_prob_single_list[self.filtered_prob_single_list > 1] = 1 - 1e-5
+		entropy_list = - (
+			self.filtered_prob_single_list * np.log2(self.filtered_prob_single_list) +
+			(1 - self.filtered_prob_single_list) * np.log2(1 - self.filtered_prob_single_list)
+		)
+
+		self.ambiguity_score = np.mean(entropy_list)
+		return self.ambiguity_score
+
+		
+		
+
+
 	def __final_score(self):
 		"""
 		compute the final score
@@ -197,10 +228,10 @@ class ClusterAmbiguity():
 			if prob_single_score > self.corr_thrl or self.pair_key_list[i] in self.gabriel_graph_edges:
 				self.filtered_prob_single_list.append(prob_single_score)
 
-		ambiguity_score_list = np.abs(np.array(self.filtered_prob_single_list) - 0.5) * 2
-		self.ambiguity_score = 1 - np.mean(ambiguity_score_list)
-		
-		return self.ambiguity_score
+		if self.mode == "average":
+			return self.__average_ambiguity()
+		elif self.mode == "entropy":
+			return self.__entropy_ambiguity()
 
 
 

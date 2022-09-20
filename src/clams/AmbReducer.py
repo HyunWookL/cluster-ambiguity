@@ -25,7 +25,7 @@ class AmbReducer():
 
 		self.hyperparameter_range = {
 			"tsne": {
-				"perplexity": (5, 500),
+				"perplexity": (1, 1000),
 			},
 			"umap": {
 				"n_neighbors": (2, 200),
@@ -55,10 +55,10 @@ class AmbReducer():
 	
 	def __get_loss(self, raw, emb):
 		if self.metric == "snc":			
-			metrics = SNC(raw, emb, iteration=300)
+			metrics = SNC(raw, emb, iteration=300, walk_num_ratio=0.4)
 			metrics.fit()
 			stead, cohev = metrics.steadiness(), metrics.cohesiveness()
-			return (stead * cohev) / (stead + cohev)
+			return (2 * (stead * cohev)) / (stead + cohev)
 		elif self.metric == "tnc":
 			pass
 
