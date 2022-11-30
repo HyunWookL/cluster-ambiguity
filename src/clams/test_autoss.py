@@ -9,8 +9,15 @@ import seaborn as sns
 
 ### read datasets
 
-zipfile = np.load("./data_sampling/crowdsourced_mapping.npz", allow_pickle=True)
+data_name = "crowdsourced_mapping"
+identifier = "npz"
+init_points = 1
+n_iter = 2
+
+zipfile = np.load(f"./data_sampling/{data_name}.{identifier}", allow_pickle=True)
 data, labels = zipfile["positions"], zipfile["labels"]
+
+data, labels = data[:1000], labels[:1000]
 
 auss = autoss.AutoScatterplotSampling(verbose=2, init_points=1, n_iter=2)
 results = auss.fit(data, labels)
@@ -18,13 +25,17 @@ results = auss.fit(data, labels)
 emb = results["sampled_point"]
 ll  = results["sampled_label"]
 
+
 fig, ax = plt.subplots(1, 2, figsize=(10, 5))
 
 ax[0].scatter(data[:, 0], data[:, 1], c=labels, s=3, cmap="tab10")
 ax[1].scatter(emb[:,0], emb[:,1], c=ll, s=3, cmap="tab10")
 
-plt.savefig("./autoss_results/plots/crowdsourced_mapping.png", dpi=300)
-plt.savefig("./autoss_results/plots/crowdsourced_mapping.pdf", dpi=300)
+results["sampled_point"] = results["sampled_point"].tolist()
+results["sampled_label"] = results["sampled_label"].tolist()
 
-with open("./autoss_results/results/crowdsourced_mapping.json", "w") as f:
-		json.dump(results, f)
+plt.savefig(f"./autoss_results/plots/{data_name}_{init_points}_{n_iter}.png", dpi=300)
+plt.savefig(f"./autoss_results/plots/{data_name}_{init_points}_{n_iter}.pdf", dpi=300)
+
+with open(f"./autoss_results/results/{data_name}_{init_points}_{n_iter}.json", "w") as f:
+	json.dump(results, f)

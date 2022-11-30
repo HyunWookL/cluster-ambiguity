@@ -43,21 +43,21 @@ class AutoScatterplotSampling():
 
 		self.hyperparameter_range = {
 			"random": {
-				"sampling_rate": (0.25, 1.0),
+				"sampling_rate": (0.3, 1.0),
 			},
 			"blue_noise": {
-				"sampling_rate": (0.25, 1.0),
+				"sampling_rate": (0.3, 1.0),
 			},
 			"density_biased": {
-				"sampling_rate": (0.25, 1.0),
+				"sampling_rate": (0.3, 1.0),
 			},
 			"outlier_biased_density": {
-				"sampling_rate": (0.25, 1.0),
+				"sampling_rate": (0.3, 1.0),
 				"alpha": (0.01, 1),
 				"beta": (0.01, 1)
 			},
 			"multiclass_blue_noise": {
-				"sampling_rate": (0.25, 1.0),
+				"sampling_rate": (0.3, 1.0),
 			},
 		}
 
