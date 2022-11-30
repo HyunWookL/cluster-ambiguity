@@ -8,6 +8,10 @@ import time
 import math
 import functools
 from utils.thread import FuncThread
+import ctypes
+
+## import knn
+from sklearn.neighbors import NearestNeighbors
 
 
 blue_noise_fail_rate = 0.1
@@ -40,7 +44,6 @@ class DensityBiasedSampling(SamplingBase):
         if k + 1 > n:
             k = int((n - 1) / 2)
         neighbor, dist = Knn(X, n, d, k + 1, 1, 1, n)
-        print(dist)
         radius_of_k_neighbor = dist[:, -1]
         for i in range(len(radius_of_k_neighbor)):
             radius_of_k_neighbor[i] = math.sqrt(radius_of_k_neighbor[i])
@@ -301,9 +304,7 @@ class MultiViewZOrderSampling(SamplingBase):
             try_list.append(to_sample)
             sets = self._construct_sets(z_lists, sr)
             selected_indexes = self._solve_set_cover(sets, n)
-            print(sr, to_sample, selected_indexes.shape[0])
             if selected_indexes.shape[0] == m:
-                print(selected_indexes.shape[0])
                 return selected_indexes
             else:
                 if last != selected_indexes.shape[0]:
@@ -439,9 +440,7 @@ class MultiClassBlueNoiseSampling(SamplingBase):
                 else:
                     fail += 1
                 flag[idx] = False
-                print(count, fail, this_cate)
             constraint_matrix /= 2
-            print("next")
         selected_indexes = np.array(selected_indexes)
         return np.array(selected_indexes)
 
@@ -607,32 +606,38 @@ def RSBS(data, category, canvas_width=1600, canvas_height=900, grid_width=20, th
     return -1, None
 
 def Knn(X, N, D, n_neighbors, forest_size, subdivide_variance_size, leaf_number):
-    ffi = cffi.FFI()
-    ffi.cdef(
-        """void knn(double* X, int N, int D, int n_neighbors, int* neighbors_nn, double* distances_nn, int forest_size,
-            int subdivide_variance_size, int leaf_number);
-         """)
-    try:
-        t1 = time.time()
-        dllPath = os.path.join('.', 'sampling/knnDll.dll')
-        C = ffi.dlopen(dllPath)
-        cffi_X1 = ffi.cast('double*', X.ctypes.data)
-        neighbors_nn = np.zeros((N, n_neighbors), dtype=np.int32)
-        distances_nn = np.zeros((N, n_neighbors), dtype=np.float64)
-        cffi_neighbors_nn = ffi.cast('int*', neighbors_nn.ctypes.data)
-        cffi_distances_nn = ffi.cast('double*', distances_nn.ctypes.data)
-        t = FuncThread(C.knn, cffi_X1, N, D, n_neighbors, cffi_neighbors_nn, cffi_distances_nn, forest_size,
-                       subdivide_variance_size, leaf_number)
-        t.daemon = True
-        t.start()
-        while t.is_alive():
-            t.join(timeout=1.0)
-            sys.stdout.flush()
-        print("knn runtime = %f" % (time.time() - t1))
-        return neighbors_nn, distances_nn
-    except Exception as ex:
-        print(ex)
-    return [[], []]
+    NN = NearestNeighbors(n_neighbors=n_neighbors, algorithm='kd_tree', n_jobs=-1)
+    NN.fit(X)
+    dist, neighbor = NN.kneighbors(X, n_neighbors=n_neighbors)
+    return neighbor, dist
+    
+		# ffi = cffi.FFI()
+    # ffi.cdef(
+    #     """void knn(double* X, int N, int D, int n_neighbors, int* neighbors_nn, double* distances_nn, int forest_size,
+    #         int subdivide_variance_size, int leaf_number);
+    #      """)
+    # try:
+    #     t1 = time.time()
+    #     os.environ['PATH'] = os.environ['PATH'] + ';' + os.path.join('.', 'sampling')
+    #     dllPath = os.path.join('.', 'sampling/knnDll.dll')
+    #     C = ffi.dlopen(dllPath)
+    #     cffi_X1 = ffi.cast('double*', X.ctypes.data)
+    #     neighbors_nn = np.zeros((N, n_neighbors), dtype=np.int32)
+    #     distances_nn = np.zeros((N, n_neighbors), dtype=np.float64)
+    #     cffi_neighbors_nn = ffi.cast('int*', neighbors_nn.ctypes.data)
+    #     cffi_distances_nn = ffi.cast('double*', distances_nn.ctypes.data)
+    #     t = FuncThread(C.knn, cffi_X1, N, D, n_neighbors, cffi_neighbors_nn, cffi_distances_nn, forest_size,
+    #                    subdivide_variance_size, leaf_number)
+    #     t.daemon = True
+    #     t.start()
+    #     while t.is_alive():
+    #         t.join(timeout=1.0)
+    #         sys.stdout.flush()
+    #     print("knn runtime = %f" % (time.time() - t1))
+    #     return neighbors_nn, distances_nn
+    # except Exception as ex:
+    #     print(ex)
+    # return [[], []]
 
 
 def get_default_outlier_scores(data, category, k=50):

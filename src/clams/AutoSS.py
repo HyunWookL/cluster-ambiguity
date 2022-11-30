@@ -27,36 +27,38 @@ class AutoScatterplotSampling():
 			self.sampling_methods = [
 				"random", 
 				"blue_noise",
-				"recursive_subdivision", 
+				"density_biased",
+				"outlier_biased_density",
 				"multiclass_blue_noise", 
-				"multiview_z_order",
 			]
 		
 		self.sampling_functions = {
 			"random": RandomSampling,
 			"blue_noise": BlueNoiseSampling,
+			"density_biased": DensityBiasedSampling,
+			"outlier_biased_density": OutlierBiasedDensityBasedSampling,
 			"recursive_subdivision": RecursiveSubdivisionBasedSampling,
-			"multiclass_blue_noise": MultiClassBlueNoiseSampling,
-			"multiview_z_order": MultiViewZOrderSampling
+			"multiclass_blue_noise": MultiClassBlueNoiseSampling
 		}
 
 		self.hyperparameter_range = {
 			"random": {
-				"sampling_rate": (0.1, 1.0),
+				"sampling_rate": (0.25, 1.0),
 			},
 			"blue_noise": {
-				"sampling_rate": (0.1, 1.0)
+				"sampling_rate": (0.25, 1.0),
 			},
-			"recursive_subdivision": {
-				"grid_width": (5, 100),
-				"threshold": (0.01, 0.5),
-				"occupied_space_ratio": (0.01, 0.5),
-				"backtracking_depth": (2, 10)
+			"density_biased": {
+				"sampling_rate": (0.25, 1.0),
+			},
+			"outlier_biased_density": {
+				"sampling_rate": (0.25, 1.0),
+				"alpha": (0.01, 1),
+				"beta": (0.01, 1)
 			},
 			"multiclass_blue_noise": {
-				"sampling_rate": (0.1, 1.0),
+				"sampling_rate": (0.25, 1.0),
 			},
-			"multiview_z_order": None
 		}
 
 	def fit(self, data, label):
@@ -67,10 +69,12 @@ class AutoScatterplotSampling():
 		
 		## run optimization for each sampling method
 		for method in self.sampling_methods:
+			if self.verbose > 0:
+				print("Optimizing for {}...".format(method))
 			if self.hyperparameter_range[method] is None:
 				func, args = self.sampling_functions[method], {}
 				self.sampler.set_sampling_method(func, **args)
-				sampled_point, sampled_label = self.sampler.sample()
+				sampled_point, sampled_label = self.sampler.get_samples()
 				ca = clams.ClusterAmbiguity(verbose=self.verbose, S=self.S)
 				score = ca.fit(sampled_point)
 				settings = {
@@ -108,7 +112,7 @@ class AutoScatterplotSampling():
 			"""
 			func, args = self.sampling_functions[method], kwargs
 			self.sampler.set_sampling_method(func, **args)
-			sampled_point, sampled_label = self.sampler.sample()
+			sampled_point, sampled_label = self.sampler.get_samples()
 			ca = clams.ClusterAmbiguity(verbose=self.verbose, S=self.S)
 			score = ca.fit(sampled_point)
 			return 1 - score ## note that cluster ambiguity is lower the better
@@ -128,9 +132,13 @@ class AutoScatterplotSampling():
 		## get the results
 		max_hyperparameter = optimizer.max["params"]
 		self.sampler.set_sampling_method(self.sampling_functions[method], **max_hyperparameter)
-		sampled_point, sampled_label = self.sampler.sample()
+		sampled_point, sampled_label = self.sampler.get_samples()
 		ca = clams.ClusterAmbiguity(verbose=self.verbose, S=self.S)
 		score = ca.fit(sampled_point)
-		return sampled_point, sampled_label, max_hyperparameter, score
+		settings = {
+			"method": method,
+			"hp": max_hyperparameter
+		}
+		return sampled_point, sampled_label, settings, score
 
 	
