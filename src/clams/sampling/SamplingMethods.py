@@ -609,6 +609,8 @@ def Knn(X, N, D, n_neighbors, forest_size, subdivide_variance_size, leaf_number)
     NN = NearestNeighbors(n_neighbors=n_neighbors, algorithm='kd_tree', n_jobs=-1)
     NN.fit(X)
     dist, neighbor = NN.kneighbors(X, n_neighbors=n_neighbors)
+    neighbor = neighbor[:, 1:]
+    dist = dist[:, 1:]
     return neighbor, dist
     
 		# ffi = cffi.FFI()
