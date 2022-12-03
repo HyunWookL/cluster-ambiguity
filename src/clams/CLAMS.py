@@ -36,7 +36,7 @@ class ClusterAmbiguity():
 	A class for computing cluster ambiguity based on clustme data
 	"""
 
-	def __init__(self, corr_thld=0.05, verbose=0, random_state=0, S=3.0, mode="average"):
+	def __init__(self, corr_thld=0.05, verbose=0, random_state=0, S=3.0, mode="average", max_gmm_num=50):
 		"""
 		INPUT:
 		- corr_thld: the threshold determining the correlation between two clusters
@@ -50,6 +50,7 @@ class ClusterAmbiguity():
 		self.random_state = random_state
 		self.S = S
 		self.mode = mode
+		self.max_gmm_num = max_gmm_num
 		## load regression model
 		with open("./regression_model/autosklearn.pkl", "rb") as f:
 			self.reg_model = pickle.load(f)
@@ -86,7 +87,8 @@ class ClusterAmbiguity():
 	def __find_optimal_n_comp(self):
 		## perform gmm from n_comp=1 to n_comp = np.sqrt(len(data)) to find optimal n_comp
 		## bic is used for the criteria
-		x_list = list(range(1, int(np.sqrt(len(self.data)))))
+		max_gmm = min(self.max_gmm_num, int(np.sqrt(len(self.data))))
+		x_list = list(range(1, max_gmm))
 		y_list = []
 		for n_comp in x_list:
 			gmm = GaussianMixture(n_components=n_comp, covariance_type='full', random_state=self.random_state)
