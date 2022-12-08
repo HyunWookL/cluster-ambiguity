@@ -19,19 +19,16 @@ class AutoOutlierDetection():
 
 	def __init__(
 		self, S=3.0, verbose=0, init_points=8, n_iter=40, detection_algorithms="all",
-		ambiguity_weight = 3
 	):
 		self.verbose = verbose
 		self.S = S
 		self.init_points = init_points
 		self.n_iter = n_iter
-		self.ambiguity_weight = ambiguity_weight
 
 		detection_algorithms_list = [
 			"isof", ## isolation forest
 			"lof", ## local outlier factor
 			"ocsvm", ## one-class svm
-			"maha", ## mahalanobis distance
 			"abod" ## angle-based outlier detection
 		]
 
@@ -47,7 +44,6 @@ class AutoOutlierDetection():
 			"isof": isolation_forest,
 			"lof": local_outlier_factor,
 			"ocsvm": one_class_svm,
-			"maha": mahalanobis_distance,
 			"abod": angle_based
 		}
 		
@@ -55,12 +51,10 @@ class AutoOutlierDetection():
 			"isof": {
 				"n_estimators": (20, 200),
 				"max_samples": (0.1, 1.0),
-				"contamination": (0.001, 0.5),
 				"max_features": (0.1, 1.0)
 			},
 			"lof": {
 				"n_neighbors": (5, 50),
-				"contamination": (0.001, 0.5),
 			},
 			"ocsvm": {
 				"kernel": (0, 4),
@@ -69,12 +63,8 @@ class AutoOutlierDetection():
 				"nu": (0.001, 1),
 				"tol": (1e-5, 1e-2)
 			},
-			"maha": {
-				"contamination": (0.001, 0.5)
-			},
 			"abod": {
 				"n_neighbors": (5, 50),
-				"contamination": (0.001, 0.5)
 			}
 		}
 	
@@ -93,6 +83,10 @@ class AutoOutlierDetection():
 				best_score = score
 				best_method = algorithm
 				best_params = params
+				if best_method in ["isof", "lof"]:
+					best_params["contamination"] = "auto"
+				elif best_method == "abod":
+					best_params["contamination"] = 0.1
 
 		## run the best setting once again
 		prediction = self.detection_functions[best_method](data, **best_params)	
@@ -116,14 +110,17 @@ class AutoOutlierDetection():
 
 		def __get_loss(**kwargs):
 			func, args = self.detection_functions[method], kwargs
+			if method in ["isof", "lof"]:
+				args["contamination"] = "auto"
+			elif method == "abod":
+				args["contamination"] = 0.1
 			prediction = func(data, **args)
 			data_wo_outliers = data[prediction == 1]
 			if data_wo_outliers.shape[0] == 0:
 				return 0
 			ca = clams.ClusterAmbiguity(verbose=self.verbose, S=self.S)
-			score = ca.fit(data_wo_outliers) * self.ambiguity_weight
-			contamination = args["contamination"] 
-			return - (score + contamination)
+			score = ca.fit(data_wo_outliers) 
+			return 1 - score
 		
 		optimizer = BayesianOptimization(
 			f=__get_loss,

@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.mixture import GaussianMixture
 from kneed import KneeLocator
 from scipy.spatial import Delaunay
-
+import warnings
 import helpers as hp
 
 import importlib
@@ -60,7 +60,7 @@ class ClusterAmbiguity():
 		self.data = data
 		## find optimal n_comp
 		self.__find_optimal_n_comp()		
-		
+
 
 		## perform gmm with optimal n_comp and extract the infos
 		self.gmm = GaussianMixture(n_components=self.optimal_n_comp, covariance_type='full', random_state=self.random_state)
@@ -98,8 +98,13 @@ class ClusterAmbiguity():
 		
 		## find the optimal elbow value based on kneedle algorithm
 		## Satopaa, Ville, et al. "Finding a" kneedle" in a haystack: Detecting knee points in system behavior." 2011 31st international conference on distributed computing systems workshops. IEEE, 2011.
-		kneedle = KneeLocator(x_list, y_list, curve='convex', direction='decreasing', S=self.S)
-		self.optimal_n_comp = kneedle.knee
+		with warnings.catch_warnings():
+			warnings.filterwarnings("error")
+			try:
+				kneedle = KneeLocator(x_list, y_list, S=self.S, curve='convex', direction="decreasing")
+				self.optimal_n_comp = kneedle.knee
+			except:
+				raise Exception("Cannot find the optimal n_comp in kneedle, try different S or run again")
 
 
 	def __extract_gaussian_info(self):
