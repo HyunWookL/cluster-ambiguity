@@ -16,6 +16,7 @@ def construct_variables():
 	"""
 	rotation_diff_list = []
 	rotation_average_list = []
+	rotation_sine_list = []
 	scaling_diff_list = []
 	mean_diff_list = []
 	gaussian_mean_vector_angle_diff_list = []
@@ -43,6 +44,7 @@ def construct_variables():
 
 			rotation_diff_list.append(input_variables["rotation_diff"])
 			rotation_average_list.append(input_variables["rotation_average"])
+			rotation_sine_list.append(input_variables["rotation_sine"])
 			scaling_diff_list.append(input_variables["scaling_diff"])
 			mean_diff_list.append(input_variables["mean_diff"])
 			scaling_size_list.append(input_variables["scaling_size"])
@@ -62,6 +64,7 @@ def construct_variables():
 	df = pd.DataFrame({
 		"rotation_diff": rotation_diff_list,
 		"rotation_average": rotation_average_list,
+		"rotation_sine": rotation_sine_list,
 		"scaling_diff": scaling_diff_list,
 		"mean_diff": mean_diff_list,
 		"prob_single": prob_single_list,
