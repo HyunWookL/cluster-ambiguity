@@ -165,6 +165,7 @@ with_scaling_arr = [
 	"rotation_average",
 	"gaussian_mean_vector_angle_diff",
 	"gaussian_mean_vector_angle_average",
+	"rotation_sine"
 ]
 
 # find_best_variable_combination(with_scaling_arr)
