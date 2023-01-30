@@ -4,18 +4,27 @@ def decompose_covariance_matrix(covariance_matrix):
 	"""
 	decompose the covariance matrix into its principal components
 	"""
-	U, s, Vt = np.linalg.svd(covariance_matrix, full_matrices=True)
-	scaling = np.sqrt(s).tolist()
-	rotation = np.arccos(U[0, 1])
-	rotation_degree = rotation * (180 / np.pi)
-
-	return scaling, rotation, rotation_degree
+	eig_values, eig_vec = np.linalg.eig(covariance_matrix) # changed from svd --> eig, to guarantee the output matrix is rotation matrix
+        long, short = eig_values
+	angle = 0
+        if short > long: # The angle should be with x-axis and major axis
+                short, long = eig_values
+                angle = np.pi / 2 # major and minor axis are perpendicular
+        rotation = np.arccos(eig_vec[0,0]) + angle
+        if eig_vec[0,1] > 0: # If - sin(x) larger than 0, the angle is (actually) in negative range
+                rotation = 2 * np.pi - rotation
+        if rotation > np.pi: # To guarantee angle in range [0,pi] -- Note: ellipse is symmetric
+                rotation = rotation - np.pi
+        rotation_degree = rotation * (180 / np.pi)
+        scaling = np.array([long, short])
+        return scaling, rotation, rotation_degree
 
 
 def construct_reg_input_variables(gaussian_info, idx_0, idx_1):
 
 	## extract rotation info
 	rotation_diff = gaussian_info["rotation"][idx_0] - gaussian_info["rotation"][idx_1]
+	rotation_sine = np.sin(rotation_diff) # add rotation sine -- note: Because ellipse is symmetric, 0 and pi are the same
 	rotation_average = (gaussian_info["rotation"][idx_0] + gaussian_info["rotation"][idx_1]) / 2
 
 	## extract scaling info
@@ -59,6 +68,7 @@ def construct_reg_input_variables(gaussian_info, idx_0, idx_1):
 	return {
 		"rotation_diff": rotation_diff,
 		"rotation_average": rotation_average,
+		"rotation_sine": rotation_sine,
 		"scaling_diff": scaling_diff,
 		"mean_diff": mean_diff,
 		"scaling_size": scaling_size,
